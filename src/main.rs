@@ -3,9 +3,41 @@ fn main() {
 
     #[derive(PartialEq, Copy, Clone)]
     enum CellState {
-        Alive = 1,
-        Dead = 0,
+        Alive,
+        Dead,
     }
+
+    /// ライフゲームにおける次のセルの状態を決定する関数
+    ///
+    /// 生存: 生きているセルに隣接する生きたセルが2つか3つならば、次の世代でも生存する。
+    /// 過疎: 生きているセルに隣接する生きたセルが1つ以下ならば、過疎により死滅する。
+    /// 過密: 生きているセルに隣接する生きたセルが4つ以上ならば、過密により死滅する。
+    /// 誕生: 死んでいるセルに隣接する生きたセルがちょうど3つあれば、次の世代が誕生する。
+    fn next_state(current: &CellState, living_neighbors: &u32) -> CellState {
+        match current {
+            CellState::Alive => match living_neighbors {
+                0 | 1 => CellState::Dead,   // 過疎
+                2 | 3 => CellState::Alive,  // 生存
+                4.. => CellState::Dead,     // 過密
+            },
+            CellState::Dead => match living_neighbors {
+                3 => CellState::Alive,  // 誕生
+                _ => CellState::Dead,   // 何も起こらない
+            }
+        }
+    }
+
+    fn living_cells(cells: &Vec<CellState>) -> u32 {
+        cells.iter().fold(0, |acc, cell: CellState| {
+            match cell {
+                CellState::Alive => acc + 1,
+                CellState::Dead => acc,
+            }
+        })
+    }
+
+    // TODO
+    // fn neighbors(cells: &Vec<CellState>, index: &u32) -> Vec<CellState> {}
 
     struct World {
         width: u32,
