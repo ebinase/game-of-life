@@ -6,8 +6,21 @@ fn main() {
 
     #[derive(PartialEq, Copy, Clone, Debug)]
     enum CellState {
-        Alive,
-        Dead,
+        Alive(AliveContext),
+        Dead(DeadContext),
+    }
+
+    #[derive(PartialEq, Copy, Clone, Debug)]
+    enum AliveContext {
+        Birth,    // 誕生
+        Survive,  // 生存
+    }
+
+    #[derive(PartialEq, Copy, Clone, Debug)]
+    enum DeadContext {
+        Overpopulated,  // 過密
+        Underpopulated, // 過疎
+        CannotBirth     // 誕生できる状態ではない
     }
 
     impl CellState {
@@ -19,14 +32,14 @@ fn main() {
         /// 誕生: 死んでいるセルに隣接する生きたセルがちょうど3つあれば、次の世代が誕生する。
         fn next(&self, living_neighbors: &u32) -> CellState {
             match self {
-                CellState::Alive => match living_neighbors {
-                    0 | 1 => CellState::Dead,   // 過疎
-                    2 | 3 => CellState::Alive,  // 生存
-                    4.. => CellState::Dead,     // 過密
+                CellState::Alive(_) => match living_neighbors {
+                    0 | 1 => CellState::Dead(DeadContext::Underpopulated),
+                    2 | 3 => CellState::Alive(AliveContext::Survive),
+                    4.. => CellState::Dead(DeadContext::Overpopulated),
                 },
-                CellState::Dead => match living_neighbors {
-                    3 => CellState::Alive,  // 誕生
-                    _ => CellState::Dead,   // 何も起こらない
+                CellState::Dead(_) => match living_neighbors {
+                    3 => CellState::Alive(AliveContext::Birth),
+                    _ => CellState::Dead(DeadContext::CannotBirth),
                 }
             }
         }
@@ -35,8 +48,8 @@ fn main() {
     fn living_cells(cells: &Vec<CellState>) -> u32 {
         cells.iter().fold(0, |acc, cell: &CellState| {
             match cell {
-                CellState::Alive => acc + 1,
-                CellState::Dead => acc,
+                CellState::Alive(_) => acc + 1,
+                CellState::Dead(_) => acc,
             }
         })
     }
@@ -85,9 +98,9 @@ fn main() {
             let cells = (0..width * height)
                 .map(|x| {
                     if x % 5 == 0 {
-                        CellState::Alive
+                        CellState::Alive(AliveContext::Birth)
                     } else {
-                        CellState::Dead
+                        CellState::Dead(DeadContext::CannotBirth)
                     }
                 })
                 .collect();
@@ -125,10 +138,16 @@ fn main() {
         fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
             for line in self.cells.as_slice().chunks(self.width as usize) {
                 for &cell in line {
-                    let symbol = if cell == CellState::Dead {
-                        '・'
-                    } else {
-                        '〇'
+                    let symbol = match cell {
+                        CellState::Alive(context) => {match context {
+                            AliveContext::Birth => '〇',
+                            AliveContext::Survive => '〇',
+                        }}
+                        CellState::Dead(context) => {match context {
+                            DeadContext::Overpopulated =>'・',
+                            DeadContext::Underpopulated => '・',
+                            DeadContext::CannotBirth => '・',
+                        }}
                     };
                     write!(f, "{}", symbol)?;
                 }
