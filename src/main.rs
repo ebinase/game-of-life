@@ -1,5 +1,3 @@
-use std::any::type_name;
-
 fn main() {
     println!("Hello, world!");
 
@@ -30,7 +28,7 @@ fn main() {
     }
 
     fn living_cells(cells: &Vec<CellState>) -> u32 {
-        cells.iter().fold(0, |acc, cell: CellState| {
+        cells.iter().fold(0, |acc, cell: &CellState| {
             match cell {
                 CellState::Alive => acc + 1,
                 CellState::Dead => acc,
@@ -38,31 +36,37 @@ fn main() {
         })
     }
 
-    fn neighbors(world: &World, index: &u32) -> Vec<CellState> {
-
+    struct Position {
+        row: u32,
+        col: u32
     }
 
-    fn neighbor_indexes(width: u32, height: u32, index: u32) -> Vec<u32> {
-        let position = (index%width, index/width);
-        // indexが範囲外かチェック
-        if index >= width * height {
-            return vec![];
-        }
+    fn neighbors(matrix: &Matrix, index: &u32) -> Vec<CellState> {
+        let width = matrix[0].len() as u32;
+        let position = Position{row: index % width, col: index / width};
 
-        let mut indexes: Vec<u32> = vec![];
+        let mut neighbors = vec![];
         for i in [-1, 0, 1] {
             for j in [-1, 0, 1] {
-                let x= position.0 as i32 + i;
-                let y = position.1 as i32 + j;
-                if !(i == 0 && j == 0) && x <= width as i32 && y <= height as i32 && x >= 0 && y >= 0 {
-                    indexes.push(y as u32 * width + x as u32);
-                } else {
-                    continue;
+                if i == 0 && j == 0 {
+                    continue
+                }
+                let row= position.row as i32 + i;
+                let col = position.col as i32 + j;
+                // 行と列が範囲内かを確認して、`Some`なセルだけをpush
+                if let Some(cell_state) = matrix
+                    .get(row as usize)
+                    .and_then(|line: &Vec<CellState>| line.get(col as usize))
+                {
+                    neighbors.push(*cell_state); // 参照をデリファレンスして`CellState`の値を格納
                 }
             }
         }
-        indexes
+
+        neighbors
     }
+
+    type Matrix = Vec<Vec<CellState>>;
 
     struct World {
         width: u32,
@@ -87,6 +91,28 @@ fn main() {
                 cells,
             }
         }
+
+        fn update(&self) -> Self {
+            let matrix: Matrix = self.cells
+                .chunks(self.width as usize)
+                .map(|row| {row.to_vec()})
+                .collect();
+
+            let updated = self.cells
+                .iter()
+                .enumerate()
+                .map(|(index, cell)| {
+                    let index_u32 = index as u32;
+                    next_state(&cell, &living_cells(&neighbors(&matrix, &index_u32)))
+                })
+                .collect();
+
+            Self {
+                width: self.width,
+                height: self.height,
+                cells: updated
+            }
+        }
     }
 
     impl std::fmt::Display for World {
@@ -106,5 +132,7 @@ fn main() {
         }
     }
 
-    println!("{}", World::new(20, 10));
+    let world = World::new(20, 10);
+    println!("{}", world);
+    println!("{}", world.update());
 }
