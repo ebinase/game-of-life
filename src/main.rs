@@ -1,3 +1,5 @@
+use std::any::type_name;
+
 fn main() {
     println!("Hello, world!");
 
@@ -36,8 +38,31 @@ fn main() {
         })
     }
 
-    // TODO
-    // fn neighbors(cells: &Vec<CellState>, index: &u32) -> Vec<CellState> {}
+    fn neighbors(world: &World, index: &u32) -> Vec<CellState> {
+
+    }
+
+    fn neighbor_indexes(width: u32, height: u32, index: u32) -> Vec<u32> {
+        let position = (index%width, index/width);
+        // indexが範囲外かチェック
+        if index >= width * height {
+            return vec![];
+        }
+
+        let mut indexes: Vec<u32> = vec![];
+        for i in [-1, 0, 1] {
+            for j in [-1, 0, 1] {
+                let x= position.0 as i32 + i;
+                let y = position.1 as i32 + j;
+                if !(i == 0 && j == 0) && x <= width as i32 && y <= height as i32 && x >= 0 && y >= 0 {
+                    indexes.push(y as u32 * width + x as u32);
+                } else {
+                    continue;
+                }
+            }
+        }
+        indexes
+    }
 
     struct World {
         width: u32,
