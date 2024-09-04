@@ -1,5 +1,8 @@
+use std::thread::sleep;
+use std::time::Duration;
+
 fn main() {
-    println!("Hello, world!");
+    println!("Welcome to Game Of Life!");
 
     #[derive(PartialEq, Copy, Clone, Debug)]
     enum CellState {
@@ -133,7 +136,13 @@ fn main() {
         }
     }
 
-    let world = World::new(20, 10);
+    let mut world = World::new(20, 10);
     println!("{}", world);
-    println!("{}", world.update());
+    sleep(Duration::from_secs(1));
+
+    loop {
+        world = world.update();
+        println!("{}", world);
+        sleep(Duration::from_secs(1));
+    }
 }
