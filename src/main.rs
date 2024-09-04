@@ -1,7 +1,7 @@
 fn main() {
     println!("Hello, world!");
 
-    #[derive(PartialEq, Copy, Clone)]
+    #[derive(PartialEq, Copy, Clone, Debug)]
     enum CellState {
         Alive,
         Dead,
@@ -36,6 +36,7 @@ fn main() {
         })
     }
 
+    #[derive(Debug)]
     struct Position {
         row: u32,
         col: u32
@@ -43,7 +44,7 @@ fn main() {
 
     fn neighbors(matrix: &Matrix, index: &u32) -> Vec<CellState> {
         let width = matrix[0].len() as u32;
-        let position = Position{row: index % width, col: index / width};
+        let position = Position{row: index / width, col: index % width};
 
         let mut neighbors = vec![];
         for i in [-1, 0, 1] {
