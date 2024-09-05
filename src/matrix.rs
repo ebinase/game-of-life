@@ -4,6 +4,7 @@ struct Position {
     col: usize,
 }
 
+#[allow(dead_code)]
 pub struct Matrix<T> {
     width: usize,
     height: usize,

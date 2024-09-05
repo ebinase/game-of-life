@@ -12,7 +12,7 @@ pub struct World {
 impl World {
     pub(crate) fn new(width: usize, height: usize, density: f64) -> Self {
         let cells = (0..width * height)
-            .map(|x| {
+            .map(|_| {
                 if random::<f64>() <= density {
                     CellState::Alive(AliveContext::Birth)
                 } else {
