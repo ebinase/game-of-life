@@ -1,5 +1,6 @@
 use std::thread::sleep;
 use std::time::Duration;
+use rand::random;
 
 fn main() {
     println!("Welcome to Game Of Life!");
@@ -108,16 +109,17 @@ fn main() {
     }
 
     struct World {
+        gen: usize,
         width: usize,
         height: usize,
         cells: Vec<CellState>,
     }
 
     impl World {
-        fn new(width: usize, height: usize) -> Self {
+        fn new(width: usize, height: usize, density: f64) -> Self {
             let cells = (0..width * height)
                 .map(|x| {
-                    if x % 5 == 0 {
+                    if random::<f64>() <= density {
                         CellState::Alive(AliveContext::Birth)
                     } else {
                         CellState::Dead(DeadContext::CannotBirth)
@@ -125,6 +127,7 @@ fn main() {
                 })
                 .collect();
             Self {
+                gen: 1,
                 width,
                 height,
                 cells,
@@ -143,6 +146,7 @@ fn main() {
                 .collect();
 
             Self {
+                gen: self.gen + 1,
                 width: self.width,
                 height: self.height,
                 cells: updated
@@ -152,6 +156,7 @@ fn main() {
 
     impl std::fmt::Display for World {
         fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            write!(f, "Generation: {}\n", self.gen)?;
             for line in self.cells.as_slice().chunks(self.width) {
                 for &cell in line {
                     let symbol = match cell {
@@ -173,7 +178,7 @@ fn main() {
         }
     }
 
-    let mut world = World::new(20, 10);
+    let mut world = World::new(40, 25, 0.3);
     println!("{}", world);
     sleep(Duration::from_secs(1));
 
