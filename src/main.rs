@@ -1,6 +1,6 @@
+use rand::random;
 use std::thread::sleep;
 use std::time::Duration;
-use rand::random;
 
 fn main() {
     println!("Welcome to Game Of Life!");
@@ -13,15 +13,15 @@ fn main() {
 
     #[derive(PartialEq, Copy, Clone, Debug)]
     enum AliveContext {
-        Birth,    // 誕生
-        Survive,  // 生存
+        Birth,   // 誕生
+        Survive, // 生存
     }
 
     #[derive(PartialEq, Copy, Clone, Debug)]
     enum DeadContext {
         Overpopulated,  // 過密
         Underpopulated, // 過疎
-        CannotBirth     // 誕生できる状態ではない
+        CannotBirth,    // 誕生できる状態ではない
     }
 
     impl CellState {
@@ -41,24 +41,22 @@ fn main() {
                 CellState::Dead(_) => match living_neighbors {
                     3 => CellState::Alive(AliveContext::Birth),
                     _ => CellState::Dead(DeadContext::CannotBirth),
-                }
+                },
             }
         }
     }
 
     fn living_cells(cells: &Vec<CellState>) -> usize {
-        cells.iter().fold(0, |acc, cell: &CellState| {
-            match cell {
-                CellState::Alive(_) => acc + 1,
-                CellState::Dead(_) => acc,
-            }
+        cells.iter().fold(0, |acc, cell: &CellState| match cell {
+            CellState::Alive(_) => acc + 1,
+            CellState::Dead(_) => acc,
         })
     }
 
     #[derive(Debug)]
     struct Position {
         row: usize,
-        col: usize
+        col: usize,
     }
 
     struct Matrix<T> {
@@ -67,35 +65,40 @@ fn main() {
         data: Vec<Vec<T>>,
     }
 
-    impl <T: std::clone::Clone> Matrix<T> {
+    impl<T: std::clone::Clone> Matrix<T> {
         fn from_vec(vec: &Vec<T>, size: usize) -> Self {
-            assert_eq!(vec.len() % size, 0, "Vec size does not match matrix dimensions");
+            assert_eq!(
+                vec.len() % size,
+                0,
+                "Each matrix dimension must be the same size"
+            );
 
-            let matrix: Vec<_> = vec
-                .chunks(size)
-                .map(|row| {row.to_vec()})
-                .collect();
+            let matrix: Vec<_> = vec.chunks(size).map(|row| row.to_vec()).collect();
 
             Matrix {
                 width: size,
                 height: matrix.len(),
-                data: matrix
+                data: matrix,
             }
         }
         fn neighbors(&self, index: usize) -> Vec<T> {
             let width = self.data[0].len();
-            let position = Position{row: index / width, col: index % width};
+            let position = Position {
+                row: index / width,
+                col: index % width,
+            };
 
             let mut neighbors = vec![];
             for i in [-1, 0, 1] {
                 for j in [-1, 0, 1] {
                     if i == 0 && j == 0 {
-                        continue
+                        continue;
                     }
-                    let row= position.row as i32 + i;
+                    let row = position.row as i32 + i;
                     let col = position.col as i32 + j;
                     // 行と列が範囲内かを確認して、`Some`なセルだけをpush
-                    if let Some(data) = self.data
+                    if let Some(data) = self
+                        .data
                         .get(row as usize)
                         .and_then(|line: &Vec<T>| line.get(col as usize))
                     {
@@ -137,19 +140,18 @@ fn main() {
         fn update(&self) -> Self {
             let matrix = Matrix::from_vec(&self.cells, self.width);
 
-            let updated = self.cells
+            let updated = self
+                .cells
                 .iter()
                 .enumerate()
-                .map(|(index, cell)| {
-                    cell.next(&living_cells(&matrix.neighbors(index)))
-                })
+                .map(|(index, cell)| cell.next(&living_cells(&matrix.neighbors(index))))
                 .collect();
 
             Self {
                 gen: self.gen + 1,
                 width: self.width,
                 height: self.height,
-                cells: updated
+                cells: updated,
             }
         }
     }
@@ -160,15 +162,15 @@ fn main() {
             for line in self.cells.as_slice().chunks(self.width) {
                 for &cell in line {
                     let symbol = match cell {
-                        CellState::Alive(context) => {match context {
+                        CellState::Alive(context) => match context {
                             AliveContext::Birth => '〇',
                             AliveContext::Survive => '〇',
-                        }}
-                        CellState::Dead(context) => {match context {
-                            DeadContext::Overpopulated =>'・',
+                        },
+                        CellState::Dead(context) => match context {
+                            DeadContext::Overpopulated => '・',
                             DeadContext::Underpopulated => '・',
                             DeadContext::CannotBirth => '・',
-                        }}
+                        },
                     };
                     write!(f, "{}", symbol)?;
                 }
