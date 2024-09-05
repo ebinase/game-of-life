@@ -30,7 +30,7 @@ fn main() {
         /// 過疎: 生きているセルに隣接する生きたセルが1つ以下ならば、過疎により死滅する。
         /// 過密: 生きているセルに隣接する生きたセルが4つ以上ならば、過密により死滅する。
         /// 誕生: 死んでいるセルに隣接する生きたセルがちょうど3つあれば、次の世代が誕生する。
-        fn next(&self, living_neighbors: u32) -> CellState {
+        fn next(&self, living_neighbors: &usize) -> CellState {
             match self {
                 CellState::Alive(_) => match living_neighbors {
                     0 | 1 => CellState::Dead(DeadContext::Underpopulated),
@@ -45,7 +45,7 @@ fn main() {
         }
     }
 
-    fn living_cells(cells: &Vec<CellState>) -> u32 {
+    fn living_cells(cells: &Vec<CellState>) -> usize {
         cells.iter().fold(0, |acc, cell: &CellState| {
             match cell {
                 CellState::Alive(_) => acc + 1,
@@ -61,23 +61,23 @@ fn main() {
     }
 
     struct Matrix<T> {
-        width: u32,
-        height: u32,
+        width: usize,
+        height: usize,
         data: Vec<Vec<T>>,
     }
 
     impl <T: std::clone::Clone> Matrix<T> {
-        fn from_vec(vec: &Vec<T>, size: u32) -> Self {
-            assert_eq!(vec.len() % size as usize, 0, "Vec size does not match matrix dimensions");
+        fn from_vec(vec: &Vec<T>, size: usize) -> Self {
+            assert_eq!(vec.len() % size, 0, "Vec size does not match matrix dimensions");
 
             let matrix: Vec<_> = vec
-                .chunks(size as usize)
+                .chunks(size)
                 .map(|row| {row.to_vec()})
                 .collect();
 
             Matrix {
                 width: size,
-                height: matrix.len() as u32,
+                height: matrix.len(),
                 data: matrix
             }
         }
@@ -108,13 +108,13 @@ fn main() {
     }
 
     struct World {
-        width: u32,
-        height: u32,
+        width: usize,
+        height: usize,
         cells: Vec<CellState>,
     }
 
     impl World {
-        fn new(width: u32, height: u32) -> Self {
+        fn new(width: usize, height: usize) -> Self {
             let cells = (0..width * height)
                 .map(|x| {
                     if x % 5 == 0 {
@@ -138,7 +138,7 @@ fn main() {
                 .iter()
                 .enumerate()
                 .map(|(index, cell)| {
-                    cell.next(living_cells(&matrix.neighbors(index)))
+                    cell.next(&living_cells(&matrix.neighbors(index)))
                 })
                 .collect();
 
@@ -152,7 +152,7 @@ fn main() {
 
     impl std::fmt::Display for World {
         fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-            for line in self.cells.as_slice().chunks(self.width as usize) {
+            for line in self.cells.as_slice().chunks(self.width) {
                 for &cell in line {
                     let symbol = match cell {
                         CellState::Alive(context) => {match context {
