@@ -30,7 +30,7 @@ fn main() {
         /// 過疎: 生きているセルに隣接する生きたセルが1つ以下ならば、過疎により死滅する。
         /// 過密: 生きているセルに隣接する生きたセルが4つ以上ならば、過密により死滅する。
         /// 誕生: 死んでいるセルに隣接する生きたセルがちょうど3つあれば、次の世代が誕生する。
-        fn next(&self, living_neighbors: &u32) -> CellState {
+        fn next(&self, living_neighbors: u32) -> CellState {
             match self {
                 CellState::Alive(_) => match living_neighbors {
                     0 | 1 => CellState::Dead(DeadContext::Underpopulated),
@@ -56,36 +56,56 @@ fn main() {
 
     #[derive(Debug)]
     struct Position {
-        row: u32,
-        col: u32
+        row: usize,
+        col: usize
     }
 
-    fn neighbors(matrix: &Matrix, index: &u32) -> Vec<CellState> {
-        let width = matrix[0].len() as u32;
-        let position = Position{row: index / width, col: index % width};
+    struct Matrix<T> {
+        width: u32,
+        height: u32,
+        data: Vec<Vec<T>>,
+    }
 
-        let mut neighbors = vec![];
-        for i in [-1, 0, 1] {
-            for j in [-1, 0, 1] {
-                if i == 0 && j == 0 {
-                    continue
-                }
-                let row= position.row as i32 + i;
-                let col = position.col as i32 + j;
-                // 行と列が範囲内かを確認して、`Some`なセルだけをpush
-                if let Some(cell_state) = matrix
-                    .get(row as usize)
-                    .and_then(|line: &Vec<CellState>| line.get(col as usize))
-                {
-                    neighbors.push(*cell_state); // 参照をデリファレンスして`CellState`の値を格納
-                }
+    impl <T: std::clone::Clone> Matrix<T> {
+        fn from_vec(vec: &Vec<T>, size: u32) -> Self {
+            assert_eq!(vec.len() % size as usize, 0, "Vec size does not match matrix dimensions");
+
+            let matrix: Vec<_> = vec
+                .chunks(size as usize)
+                .map(|row| {row.to_vec()})
+                .collect();
+
+            Matrix {
+                width: size,
+                height: matrix.len() as u32,
+                data: matrix
             }
         }
+        fn neighbors(&self, index: usize) -> Vec<T> {
+            let width = self.data[0].len();
+            let position = Position{row: index / width, col: index % width};
 
-        neighbors
+            let mut neighbors = vec![];
+            for i in [-1, 0, 1] {
+                for j in [-1, 0, 1] {
+                    if i == 0 && j == 0 {
+                        continue
+                    }
+                    let row= position.row as i32 + i;
+                    let col = position.col as i32 + j;
+                    // 行と列が範囲内かを確認して、`Some`なセルだけをpush
+                    if let Some(data) = self.data
+                        .get(row as usize)
+                        .and_then(|line: &Vec<T>| line.get(col as usize))
+                    {
+                        neighbors.push(data.clone());
+                    }
+                }
+            }
+
+            neighbors
+        }
     }
-
-    type Matrix = Vec<Vec<CellState>>;
 
     struct World {
         width: u32,
@@ -112,17 +132,13 @@ fn main() {
         }
 
         fn update(&self) -> Self {
-            let matrix: Matrix = self.cells
-                .chunks(self.width as usize)
-                .map(|row| {row.to_vec()})
-                .collect();
+            let matrix = Matrix::from_vec(&self.cells, self.width);
 
             let updated = self.cells
                 .iter()
                 .enumerate()
                 .map(|(index, cell)| {
-                    let index_u32 = index as u32;
-                    cell.next(&living_cells(&neighbors(&matrix, &index_u32)))
+                    cell.next(living_cells(&matrix.neighbors(index)))
                 })
                 .collect();
 
