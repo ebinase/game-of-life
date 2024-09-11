@@ -28,8 +28,8 @@ impl CellState {
         match self {
             CellState::Alive(_) => match living_neighbors {
                 0 | 1 => CellState::Dead(DeadContext::Underpopulated),
-                2 | 3 => CellState::Alive(AliveContext::Survive),
-                4.. => CellState::Dead(DeadContext::Overpopulated),
+                _ => CellState::Alive(AliveContext::Survive),
+                // 4.. => CellState::Dead(DeadContext::Overpopulated),
             },
             CellState::Dead(_) => match living_neighbors {
                 3 => CellState::Alive(AliveContext::Birth),
