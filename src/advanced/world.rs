@@ -1,8 +1,8 @@
-use crate::cell::{living_cells, AliveContext, CellState, DeadContext};
-use crate::field::Field;
-use crate::matrix::Matrix;
 use rand::random;
 use std::cmp::{max, min};
+use crate::advanced::cell::{living_cells, AliveContext, CellState, DeadContext};
+use crate::advanced::field::Field;
+use crate::shared::matrix::Matrix;
 
 pub struct World {
     pub(crate) gen: usize,
@@ -87,5 +87,27 @@ impl World {
             },
             _ => field,
         }
+    }
+}
+
+impl std::fmt::Display for World {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Generation: {}\n", self.gen)?;
+        for line in self.fields.as_slice().chunks(self.width) {
+            for field in line {
+                let symbol = match field.cell_state {
+                    CellState::Alive(context) => match context {
+                        AliveContext::Birth => '〇',
+                        AliveContext::Survive => '〇',
+                    },
+                    CellState::Dead(_) => match field.resource_level.abs() {
+                        _ => '・'
+                    },
+                };
+                write!(f, "{}", symbol)?;
+            }
+            write!(f, "\n")?;
+        }
+        Ok(())
     }
 }

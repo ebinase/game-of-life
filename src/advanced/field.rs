@@ -1,4 +1,4 @@
-use crate::cell::CellState;
+use crate::advanced::cell::CellState;
 
 pub struct Field {
     pub(crate) cell_state: CellState,

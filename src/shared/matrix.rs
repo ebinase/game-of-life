@@ -11,7 +11,7 @@ pub struct Matrix<T> {
     data: Vec<Vec<T>>,
 }
 
-impl<T: std::clone::Clone> Matrix<T> {
+impl<T: Clone> Matrix<T> {
     pub(crate) fn from_vec(vec: &Vec<T>, size: usize) -> Self {
         assert_eq!(
             vec.len() % size,
