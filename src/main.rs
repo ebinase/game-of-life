@@ -1,15 +1,29 @@
 mod advanced;
-mod shared;
 mod basic;
+mod shared;
 
+use crate::advanced::world::AdvancedWorld;
+use crate::basic::world::BasicWorld;
+use crate::shared::world::World;
 use clap::Parser;
 use std::thread::sleep;
 use std::time::Duration;
-use crate::basic::world::World;
+
+// See. https://docs.rs/strum/latest/strum/derive.EnumString.html
+#[derive(Debug, Clone, strum::EnumString, strum::Display)]
+#[strum(serialize_all = "lowercase")]
+enum GameMode {
+    Basic,
+    Advanced,
+}
 
 #[derive(Parser, Debug)]
 #[command(disable_help_flag = true)]
 struct Args {
+    /// ゲームモード（BASICまたはADVANCED）
+    #[arg(short, long, default_value_t = GameMode::Basic, value_parser = clap::value_parser!(GameMode))]
+    mode: GameMode,
+
     /// セルを配置するフィールドの幅
     #[arg(short, long, default_value_t = 20)]
     width: usize,
@@ -28,7 +42,15 @@ fn main() {
 
     let args = Args::parse();
 
-    let mut world = World::new(args.width, args.height, args.density);
+    println!("ゲームモード: {}", args.mode);
+
+    match args.mode {
+        GameMode::Basic => execute(BasicWorld::new(args.width, args.height, args.density)),
+        GameMode::Advanced => execute(AdvancedWorld::new(args.width, args.height, args.density)),
+    }
+}
+
+fn execute(mut world: impl World) {
     println!("{}", world);
     sleep(Duration::from_secs(1));
 
