@@ -6,6 +6,7 @@ use crate::advanced::world::AdvancedWorld;
 use crate::basic::world::BasicWorld;
 use crate::shared::world::World;
 use clap::Parser;
+use console::Term;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -38,25 +39,29 @@ struct Args {
 }
 
 fn main() {
-    println!("Welcome to Game Of Life!");
-
     let args = Args::parse();
-
-    println!("ゲームモード: {}", args.mode);
-
     match args.mode {
-        GameMode::Basic => execute(BasicWorld::new(args.width, args.height, args.density)),
-        GameMode::Advanced => execute(AdvancedWorld::new(args.width, args.height, args.density)),
+        GameMode::Basic => execute(
+            args.mode,
+            BasicWorld::new(args.width, args.height, args.density),
+        ),
+        GameMode::Advanced => execute(
+            args.mode,
+            AdvancedWorld::new(args.width, args.height, args.density),
+        ),
     }
 }
 
-fn execute(mut world: impl World) {
-    println!("{}", world);
-    sleep(Duration::from_secs(1));
+fn execute(mode: GameMode, mut world: impl World) {
+    let term = Term::stdout();
 
     loop {
-        world = world.update();
+        term.clear_screen().expect("failed to clear screen!");
+        println!("[Game Of Life] {}", mode);
+
         println!("{}", world);
         sleep(Duration::from_millis(300));
+
+        world = world.update();
     }
 }

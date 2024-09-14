@@ -6,5 +6,6 @@ description = "Rustで実装されたライフゲーム"
 
 [dependencies]
 clap = { version = "4.5.17", features = ["derive"] }
+console = "0.15.8"
 rand = "0.8.5"
 strum = { version = "0.26.3", features = ["derive"] }
