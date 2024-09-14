@@ -103,7 +103,7 @@ impl std::fmt::Display for AdvancedWorld {
                     CellState::Alive(_) => style('〇'),
                     CellState::Dead(_) => match field.resource_level.abs() {
                         _ => match field.resource_level {
-                            ..-1 => style('・').red().bold(),
+                            ..-1 => style('　'),
                             _ => style('・').green().bold(),
                         },
                     },
