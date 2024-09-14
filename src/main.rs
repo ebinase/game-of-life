@@ -36,6 +36,9 @@ struct Args {
     /// 初期状態で何%の確率でセルを誕生させるか(0.0: 全滅 ~  1.0: 全て生存)
     #[arg(short, long, default_value_t = 0.2)]
     density: f64,
+
+    #[arg(long, action = clap::ArgAction::Help)]
+    help: Option<bool>,
 }
 
 fn main() {
