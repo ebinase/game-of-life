@@ -1,18 +1,19 @@
-use rand::random;
-use std::cmp::{max, min};
 use crate::advanced::cell::{living_cells, AliveContext, CellState, DeadContext};
 use crate::advanced::field::Field;
 use crate::shared::matrix::Matrix;
+use crate::shared::world::World;
+use rand::random;
+use std::cmp::{max, min};
 
-pub struct World {
+pub struct AdvancedWorld {
     pub(crate) gen: usize,
     pub(crate) width: usize,
     height: usize,
     pub(crate) fields: Vec<Field>,
 }
 
-impl World {
-    pub(crate) fn new(width: usize, height: usize, density: f64) -> Self {
+impl World for AdvancedWorld {
+    fn new(width: usize, height: usize, density: f64) -> Self {
         let fields = (0..width * height)
             .map(|_| {
                 if random::<f64>() <= density {
@@ -31,7 +32,7 @@ impl World {
         }
     }
 
-    pub(crate) fn update(&self) -> Self {
+    fn update(&self) -> Self {
         let cell_matrix = Matrix::from_vec(
             &self.fields.iter().map(|field| field.cell_state).collect(),
             self.width,
@@ -60,7 +61,9 @@ impl World {
             fields: updated,
         }
     }
+}
 
+impl AdvancedWorld {
     fn apply_resource_effect(field: Field) -> Field {
         match (field.resource_level, field.cell_state) {
             // 資源が不足しているならSurviveできない可能性がある
@@ -90,7 +93,7 @@ impl World {
     }
 }
 
-impl std::fmt::Display for World {
+impl std::fmt::Display for AdvancedWorld {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "Generation: {}\n", self.gen)?;
         for line in self.fields.as_slice().chunks(self.width) {
@@ -101,7 +104,7 @@ impl std::fmt::Display for World {
                         AliveContext::Survive => '〇',
                     },
                     CellState::Dead(_) => match field.resource_level.abs() {
-                        _ => '・'
+                        _ => '・',
                     },
                 };
                 write!(f, "{}", symbol)?;

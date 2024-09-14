@@ -1,2 +1,2 @@
-pub mod world;
 mod cell;
+pub mod world;

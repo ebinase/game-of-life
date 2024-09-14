@@ -1,3 +1,3 @@
-pub mod world;
-mod field;
 mod cell;
+mod field;
+pub mod world;

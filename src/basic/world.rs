@@ -1,16 +1,17 @@
-use rand::random;
 use crate::basic::cell::{living_cells, AliveContext, CellState, DeadContext};
 use crate::shared::matrix::Matrix;
+use crate::shared::world::World;
+use rand::random;
 
-pub struct World {
+pub struct BasicWorld {
     pub(crate) gen: usize,
     pub(crate) width: usize,
     height: usize,
     pub(crate) cells: Vec<CellState>,
 }
 
-impl World {
-    pub(crate) fn new(width: usize, height: usize, density: f64) -> Self {
+impl World for BasicWorld {
+    fn new(width: usize, height: usize, density: f64) -> Self {
         let cells = (0..width * height)
             .map(|_| {
                 if random::<f64>() <= density {
@@ -28,7 +29,7 @@ impl World {
         }
     }
 
-    pub(crate) fn update(&self) -> Self {
+    fn update(&self) -> Self {
         let matrix = Matrix::from_vec(&self.cells, self.width);
 
         let updated = self
@@ -47,14 +48,14 @@ impl World {
     }
 }
 
-impl std::fmt::Display for World {
+impl std::fmt::Display for BasicWorld {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "Generation: {}\n", self.gen)?;
         for line in self.cells.as_slice().chunks(self.width) {
             for &cell in line {
                 let symbol = match cell {
                     CellState::Alive(_) => '〇',
-                    CellState::Dead(_)  => '・',
+                    CellState::Dead(_) => '・',
                 };
                 write!(f, "{}", symbol)?;
             }
