@@ -71,7 +71,7 @@ impl AdvancedWorld {
             (..-1, CellState::Alive(_)) => {
                 if random::<f64>() < field.resource_level.abs() as f64 / 10.0 {
                     Field {
-                        cell_state: CellState::Dead(DeadContext::Overpopulated), // コンテキストは仮置き
+                        cell_state: CellState::Dead(DeadContext::Starvation),  // 資源不足でDeadへ
                         resource_level: field.resource_level,
                     }
                 } else {
@@ -83,8 +83,8 @@ impl AdvancedWorld {
                 context,
                 random::<f64>() < field.resource_level.abs() as f64 / 10.0,
             ) {
-                (DeadContext::Underpopulated | DeadContext::Overpopulated, true) => Field {
-                    cell_state: CellState::Alive(AliveContext::Survive),
+                (DeadContext::Underpopulated, true) => Field {
+                    cell_state: CellState::Alive(AliveContext::Survive),  // Deadを回避
                     resource_level: field.resource_level,
                 },
                 _ => field,

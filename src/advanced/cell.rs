@@ -12,17 +12,16 @@ pub enum AliveContext {
 
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum DeadContext {
-    Overpopulated,  // 過密
     Underpopulated, // 過疎
     CannotBirth,    // 誕生できる状態ではない
+    Starvation      // 餓死
 }
 
 impl CellState {
-    /// ライフゲームにおける次のセルの状態を決定する関数
+    /// ライフゲームにおける次のセルの状態を決定する関数(過密は廃止)
     ///
     /// 生存: 生きているセルに隣接する生きたセルが2つか3つならば、次の世代でも生存する。
     /// 過疎: 生きているセルに隣接する生きたセルが1つ以下ならば、過疎により死滅する。
-    /// 過密: 生きているセルに隣接する生きたセルが4つ以上ならば、過密により死滅する。
     /// 誕生: 死んでいるセルに隣接する生きたセルがちょうど3つあれば、次の世代が誕生する。
     pub(crate) fn next(&self, neighbors: &Vec<CellState>) -> CellState {
         let living_neighbors = living_cells(neighbors);
@@ -30,7 +29,6 @@ impl CellState {
             CellState::Alive(_) => match living_neighbors {
                 0 | 1 => CellState::Dead(DeadContext::Underpopulated),
                 _ => CellState::Alive(AliveContext::Survive),
-                // 4.. => CellState::Dead(DeadContext::Overpopulated),
             },
             CellState::Dead(_) => match living_neighbors {
                 3 => CellState::Alive(AliveContext::Birth),
