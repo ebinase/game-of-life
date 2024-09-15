@@ -4,7 +4,6 @@ use crate::shared::matrix::Matrix;
 use crate::shared::world::World;
 use console::style;
 use rand::random;
-use std::cmp::{max, min};
 
 pub struct AdvancedWorld {
     pub(crate) gen: usize,
@@ -44,12 +43,10 @@ impl World for AdvancedWorld {
             .iter()
             .enumerate()
             .map(|(index, field)| Field {
-                cell_state: field
-                    .cell_state
-                    .next(&cell_matrix.neighbors(index)),
-                resource_level: match field.cell_state {
-                    CellState::Alive(_) => max(field.resource_level - 3, -10),
-                    CellState::Dead(_) => min(field.resource_level + 1, 10),
+                cell_state: field.cell_state.next(&cell_matrix.neighbors(index)),
+                resource: match field.cell_state {
+                    CellState::Alive(_) => field.resource.consume(),
+                    CellState::Dead(_) => field.resource.recover(),
                 },
             })
             .map(Self::apply_resource_effect)
@@ -66,29 +63,28 @@ impl World for AdvancedWorld {
 
 impl AdvancedWorld {
     fn apply_resource_effect(field: Field) -> Field {
-        match (field.resource_level, field.cell_state) {
+        match (field.resource.value, field.cell_state) {
             // 資源が不足しているならSurviveできない可能性がある
             (..-1, CellState::Alive(_)) => {
-                if random::<f64>() < field.resource_level.abs() as f64 / 10.0 {
+                if random::<f64>() < field.resource.percentage() {
                     Field {
-                        cell_state: CellState::Dead(DeadContext::Starvation),  // 資源不足でDeadへ
-                        resource_level: field.resource_level,
+                        cell_state: CellState::Dead(DeadContext::Starvation), // 資源不足でDeadへ
+                        resource: field.resource,
                     }
                 } else {
                     field
                 }
             }
             // 資源が豊富ならDeadを回避する可能性がある
-            (1.., CellState::Dead(context)) => match (
-                context,
-                random::<f64>() < field.resource_level.abs() as f64 / 10.0,
-            ) {
-                (DeadContext::Underpopulated, true) => Field {
-                    cell_state: CellState::Alive(AliveContext::Survive),  // Deadを回避
-                    resource_level: field.resource_level,
-                },
-                _ => field,
-            },
+            (1.., CellState::Dead(context)) => {
+                match (context, random::<f64>() < field.resource.percentage()) {
+                    (DeadContext::Underpopulated, true) => Field {
+                        cell_state: CellState::Alive(AliveContext::Survive), // Deadを回避
+                        resource: field.resource,
+                    },
+                    _ => field,
+                }
+            }
             _ => field,
         }
     }
@@ -101,11 +97,9 @@ impl std::fmt::Display for AdvancedWorld {
             for field in line {
                 let symbol = match field.cell_state {
                     CellState::Alive(_) => style('〇'),
-                    CellState::Dead(_) => match field.resource_level.abs() {
-                        _ => match field.resource_level {
-                            ..-1 => style('　'),
-                            _ => style('・').green().bold(),
-                        },
+                    CellState::Dead(_) => match field.resource.value {
+                        ..-1 => style('　'),
+                        _ => style('・').green().bold(),
                     },
                 };
                 write!(f, "{}", symbol)?;
