@@ -1,4 +1,4 @@
-use crate::basic::cell::{living_cells, AliveContext, CellState, DeadContext};
+use crate::basic::cell::{AliveContext, CellState, DeadContext};
 use crate::shared::matrix::Matrix;
 use crate::shared::world::World;
 use rand::random;
@@ -36,7 +36,7 @@ impl World for BasicWorld {
             .cells
             .iter()
             .enumerate()
-            .map(|(index, cell)| cell.next(&living_cells(&matrix.neighbors(index))))
+            .map(|(index, cell)| cell.next(&matrix.neighbors(index)))
             .collect();
 
         Self {

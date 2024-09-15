@@ -24,7 +24,8 @@ impl CellState {
     /// 過疎: 生きているセルに隣接する生きたセルが1つ以下ならば、過疎により死滅する。
     /// 過密: 生きているセルに隣接する生きたセルが4つ以上ならば、過密により死滅する。
     /// 誕生: 死んでいるセルに隣接する生きたセルがちょうど3つあれば、次の世代が誕生する。
-    pub(crate) fn next(&self, living_neighbors: &usize) -> CellState {
+    pub(crate) fn next(&self, neighbors: &Vec<CellState>) -> CellState {
+        let living_neighbors = living_cells(neighbors);
         match self {
             CellState::Alive(_) => match living_neighbors {
                 0 | 1 => CellState::Dead(DeadContext::Underpopulated),
@@ -39,7 +40,7 @@ impl CellState {
     }
 }
 
-pub fn living_cells(cells: &Vec<CellState>) -> usize {
+fn living_cells(cells: &Vec<CellState>) -> usize {
     cells.iter().fold(0, |acc, cell: &CellState| match cell {
         CellState::Alive(_) => acc + 1,
         CellState::Dead(_) => acc,

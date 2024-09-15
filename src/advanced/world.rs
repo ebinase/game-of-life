@@ -1,4 +1,4 @@
-use crate::advanced::cell::{living_cells, AliveContext, CellState, DeadContext};
+use crate::advanced::cell::{AliveContext, CellState, DeadContext};
 use crate::advanced::field::Field;
 use crate::shared::matrix::Matrix;
 use crate::shared::world::World;
@@ -46,7 +46,7 @@ impl World for AdvancedWorld {
             .map(|(index, field)| Field {
                 cell_state: field
                     .cell_state
-                    .next(&living_cells(&cell_matrix.neighbors(index))),
+                    .next(&cell_matrix.neighbors(index)),
                 resource_level: match field.cell_state {
                     CellState::Alive(_) => max(field.resource_level - 3, -10),
                     CellState::Dead(_) => min(field.resource_level + 1, 10),
